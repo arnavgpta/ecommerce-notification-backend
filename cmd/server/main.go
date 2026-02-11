@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/arnavgpta/ecommerce-notification-backend/internal/handlers"
+	"github.com/arnavgpta/ecommerce-notification-backend/internal/repository"
 	_ "github.com/lib/pq"
 )
 
@@ -25,6 +27,11 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
+
+	eventRepo := repository.NewEventRepository(db)
+	eventHandler := handlers.NewEventHandler(eventRepo)
+
+	mux.HandleFunc("/events", eventHandler.IngestEvent)
 
 	log.Println("server running on :8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))

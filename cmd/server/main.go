@@ -9,6 +9,8 @@ import (
 	"github.com/arnavgpta/ecommerce-notification-backend/internal/handlers"
 	"github.com/arnavgpta/ecommerce-notification-backend/internal/repository"
 	_ "github.com/lib/pq"
+
+	"github.com/arnavgpta/ecommerce-notification-backend/internal/processor"
 )
 
 func main() {
@@ -29,7 +31,10 @@ func main() {
 	mux := http.NewServeMux()
 
 	eventRepo := repository.NewEventRepository(db)
-	eventHandler := handlers.NewEventHandler(eventRepo)
+	eventProcessor := processor.NewEventProcessor(100)
+	eventProcessor.StartWorker()
+
+	eventHandler := handlers.NewEventHandler(eventRepo, eventProcessor)
 
 	mux.HandleFunc("/events", eventHandler.IngestEvent)
 

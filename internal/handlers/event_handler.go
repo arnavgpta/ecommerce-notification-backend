@@ -5,15 +5,23 @@ import (
 	"net/http"
 
 	"github.com/arnavgpta/ecommerce-notification-backend/internal/models"
+	"github.com/arnavgpta/ecommerce-notification-backend/internal/processor"
 	"github.com/arnavgpta/ecommerce-notification-backend/internal/repository"
 )
 
 type EventHandler struct {
-	repo *repository.EventRepository
+	repo      *repository.EventRepository
+	processor *processor.EventProcessor
 }
 
-func NewEventHandler(repo *repository.EventRepository) *EventHandler {
-	return &EventHandler{repo: repo}
+func NewEventHandler(
+	repo *repository.EventRepository,
+	processor *processor.EventProcessor,
+) *EventHandler {
+	return &EventHandler{
+		repo:      repo,
+		processor: processor,
+	}
 }
 
 func (h *EventHandler) IngestEvent(w http.ResponseWriter, r *http.Request) {
@@ -39,6 +47,8 @@ func (h *EventHandler) IngestEvent(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "could not store event", http.StatusInternalServerError)
 		return
 	}
+
+	h.processor.Enqueue(req)
 
 	w.WriteHeader(http.StatusCreated)
 }

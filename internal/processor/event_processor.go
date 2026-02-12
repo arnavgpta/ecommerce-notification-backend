@@ -3,6 +3,7 @@ package processor
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/arnavgpta/ecommerce-notification-backend/internal/models"
 	"github.com/arnavgpta/ecommerce-notification-backend/internal/repository"
@@ -38,16 +39,37 @@ func (p *EventProcessor) Enqueue(event models.CreateEventRequest) {
 
 func (p *EventProcessor) handleEvent(event models.CreateEventRequest) {
 
-	notificationType, shouldNotify :=
-		rules.DetermineNotification(event)
+	rule := rules.DetermineNotification(event.EventType)
 
-	if !shouldNotify {
+	if !rule.ShouldNotify {
 		return
 	}
 
+	if rule.Delay > 0 {
+		go p.scheduleNotification(event.UserID, rule.NotificationType, rule.Delay)
+		return
+	}
+
+	p.createNotification(event.UserID, rule.NotificationType)
+}
+
+func (p *EventProcessor) scheduleNotification(
+	userID int,
+	notificationType string,
+	delay time.Duration,
+) {
+	time.Sleep(delay)
+
+	p.createNotification(userID, notificationType)
+}
+
+func (p *EventProcessor) createNotification(
+	userID int,
+	notificationType string,
+) {
 	err := p.notificationRepo.CreateNotification(
 		context.Background(),
-		event.UserID,
+		userID,
 		notificationType,
 	)
 
@@ -58,6 +80,6 @@ func (p *EventProcessor) handleEvent(event models.CreateEventRequest) {
 
 	log.Printf("notification created: %s for user %d",
 		notificationType,
-		event.UserID,
+		userID,
 	)
 }

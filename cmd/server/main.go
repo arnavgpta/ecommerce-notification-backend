@@ -31,10 +31,19 @@ func main() {
 	mux := http.NewServeMux()
 
 	eventRepo := repository.NewEventRepository(db)
-	eventProcessor := processor.NewEventProcessor(100)
+	notificationRepo := repository.NewNotificationRepository(db)
+
+	eventProcessor := processor.NewEventProcessor(
+		100,
+		notificationRepo,
+	)
+
 	eventProcessor.StartWorker()
 
-	eventHandler := handlers.NewEventHandler(eventRepo, eventProcessor)
+	eventHandler := handlers.NewEventHandler(
+		eventRepo,
+		eventProcessor,
+	)
 
 	mux.HandleFunc("/events", eventHandler.IngestEvent)
 

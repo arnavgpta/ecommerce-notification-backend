@@ -1,21 +1,41 @@
 package rules
 
-import "github.com/arnavgpta/ecommerce-notification-backend/internal/models"
+import "time"
 
-func DetermineNotification(event models.CreateEventRequest) (string, bool) {
+type RuleResult struct {
+	NotificationType string
+	Delay            time.Duration
+	ShouldNotify     bool
+}
 
-	switch event.EventType {
+func DetermineNotification(eventType string) RuleResult {
+
+	switch eventType {
 
 	case "added_to_cart":
-		return "cart_reminder", true
+		return RuleResult{
+			NotificationType: "cart_reminder",
+			Delay:            30 * time.Second,
+			ShouldNotify:     true,
+		}
 
 	case "order_placed":
-		return "order_confirmation", true
+		return RuleResult{
+			NotificationType: "order_confirmation",
+			Delay:            0,
+			ShouldNotify:     true,
+		}
 
 	case "user_signed_up":
-		return "welcome_message", true
+		return RuleResult{
+			NotificationType: "welcome_message",
+			Delay:            0,
+			ShouldNotify:     true,
+		}
 
 	default:
-		return "", false
+		return RuleResult{
+			ShouldNotify: false,
+		}
 	}
 }

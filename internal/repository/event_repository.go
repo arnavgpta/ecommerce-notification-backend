@@ -39,3 +39,25 @@ func (r *EventRepository) CreateEvent(
 
 	return err
 }
+
+func (r *EventRepository) HasRecentOrder(
+	ctx context.Context,
+	userID int,
+) (bool, error) {
+
+	query := `
+		SELECT COUNT(1)
+		FROM events
+		WHERE user_id = $1
+		AND event_type = 'order_placed'
+		AND created_at > NOW() - INTERVAL '5 minutes'
+	`
+
+	var count int
+	err := r.db.QueryRowContext(ctx, query, userID).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}

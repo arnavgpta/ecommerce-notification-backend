@@ -39,3 +39,18 @@ func (r *NotificationRepository) ExistsPendingNotification(
 
 	return count > 0, nil
 }
+
+func (r *NotificationRepository) CreateNotification(
+	ctx context.Context,
+	userID int,
+	notificationType string,
+) error {
+
+	query := `
+		INSERT INTO notifications (user_id, type)
+		VALUES ($1, $2)
+	`
+
+	_, err := r.db.ExecContext(ctx, query, userID, notificationType)
+	return err
+}

@@ -13,6 +13,7 @@ import (
 type EventProcessor struct {
 	queue            chan models.CreateEventRequest
 	notificationRepo *repository.NotificationRepository
+	eventRepo        *repository.EventRepository
 }
 
 func NewEventProcessor(

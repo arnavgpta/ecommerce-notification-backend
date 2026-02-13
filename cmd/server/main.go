@@ -36,6 +36,7 @@ func main() {
 	eventProcessor := processor.NewEventProcessor(
 		100,
 		notificationRepo,
+		eventRepo,
 	)
 
 	eventProcessor.StartWorker()

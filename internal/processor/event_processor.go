@@ -19,10 +19,12 @@ type EventProcessor struct {
 func NewEventProcessor(
 	bufferSize int,
 	notificationRepo *repository.NotificationRepository,
+	eventRepo *repository.EventRepository,
 ) *EventProcessor {
 	return &EventProcessor{
 		queue:            make(chan models.CreateEventRequest, bufferSize),
 		notificationRepo: notificationRepo,
+		eventRepo:        eventRepo,
 	}
 }
 
@@ -59,7 +61,22 @@ func (p *EventProcessor) scheduleNotification(
 	notificationType string,
 	delay time.Duration,
 ) {
+
 	time.Sleep(delay)
+
+	hasOrdered, err := p.eventRepo.HasRecentOrder(
+		context.Background(),
+		userID,
+	)
+	if err != nil {
+		log.Printf("order check failed: %v", err)
+		return
+	}
+
+	if hasOrdered {
+		log.Printf("cart reminder cancelled for user %d", userID)
+		return
+	}
 
 	p.createNotification(userID, notificationType)
 }

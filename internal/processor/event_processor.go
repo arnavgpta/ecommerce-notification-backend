@@ -85,7 +85,24 @@ func (p *EventProcessor) createNotification(
 	userID int,
 	notificationType string,
 ) {
-	err := p.notificationRepo.CreateNotification(
+
+	exists, err := p.notificationRepo.ExistsPendingNotification(
+		context.Background(),
+		userID,
+		notificationType,
+	)
+
+	if err != nil {
+		log.Printf("duplicate check failed: %v", err)
+		return
+	}
+
+	if exists {
+		log.Printf("duplicate notification prevented for user %d", userID)
+		return
+	}
+
+	err = p.notificationRepo.CreateNotification(
 		context.Background(),
 		userID,
 		notificationType,

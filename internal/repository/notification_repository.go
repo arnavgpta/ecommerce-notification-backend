@@ -13,17 +13,29 @@ func NewNotificationRepository(db *sql.DB) *NotificationRepository {
 	return &NotificationRepository{db: db}
 }
 
-func (r *NotificationRepository) CreateNotification(
+func (r *NotificationRepository) ExistsPendingNotification(
 	ctx context.Context,
 	userID int,
 	notificationType string,
-) error {
+) (bool, error) {
 
 	query := `
-		INSERT INTO notifications (user_id, type)
-		VALUES ($1, $2)
+		SELECT COUNT(1)
+		FROM notifications
+		WHERE user_id = $1
+		AND type = $2
+		AND status = 'pending'
 	`
 
-	_, err := r.db.ExecContext(ctx, query, userID, notificationType)
-	return err
+	var count int
+	err := r.db.QueryRowContext(ctx, query,
+		userID,
+		notificationType,
+	).Scan(&count)
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
 }
